@@ -1,6 +1,7 @@
 package services;
 
 import domain.Member;
+
 import java.util.List;
 
 public class CashierService {
@@ -44,11 +45,25 @@ public class CashierService {
     }
 
     public Member updateInfo(Member updatedMember) {
-        if(updatedMember == null){
+        if (updatedMember == null) {
             return null;
         }
-        
+
         return member.updateMember(updatedMember);
+    }
+
+    public int collectPoint(String tel, int price) {
+        if (tel == null || tel.isBlank()) {
+            return -1;
+        }
+        return member.increasePoint(tel, price);
+    }
+
+    public int discount(String tel, int price) {
+        if (tel == null || tel.isBlank()) {
+            return -1;
+        }
+        return member.decreasePoint(tel, price);
     }
 
 }

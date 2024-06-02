@@ -2,10 +2,12 @@ package domain;
 
 import java.io.Serializable;
 
-public class Member implements Serializable{
+public class Member implements Serializable {
+    private int id;
     private String name;
     private String tel;
     private String idCard;
+    private int point = 0;
 
     public Member(String name, String tel, String idCard) {
         this.name = name;
@@ -33,16 +35,33 @@ public class Member implements Serializable{
         return idCard;
     }
 
-    public void setIdCard(String idCard) {
-        this.idCard = idCard;
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getPoint() {
+        return point;
+    }
+
+    public int addPoint(int point) {
+        return this.point += point;
+    }
+
+    public int minusPoint(int point) {
+        return this.point -= point;
     }
 
     @Override
     public String toString() {
-        return "Member{" + "name=" + name + ", tel=" + tel + ", idCard=" + idCard + '}';
+        return "Member{" +
+                "name='" + name + '\'' +
+                ", tel='" + tel + '\'' +
+                ", idCard='" + idCard + '\'' +
+                ", point=" + point +
+                '}';
     }
-    
-    
-    
-    
 }

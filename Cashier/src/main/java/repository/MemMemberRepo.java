@@ -17,6 +17,7 @@ public class MemMemberRepo implements MemberRepository {
 
     @Override
     public Member addMember(Member member) {
+        member.setId(nextId);
         return repo.put(nextId++, member);
     }
 
@@ -61,6 +62,26 @@ public class MemMemberRepo implements MemberRepository {
             }
         }
         return null;
+    }
+
+    @Override
+    public int increasePoint(String tel, int point) {
+        Member member = findMember(tel);
+        if (member != null) {
+            member.addPoint(point);
+            return member.getPoint();
+        }
+        return -1;
+    }
+
+    @Override
+    public int decreasePoint(String tel, int point) {
+        Member member = findMember(tel);
+        if (member != null) {
+            member.minusPoint(point);
+            return member.getPoint();
+        }
+        return -1;
     }
 
     @Override

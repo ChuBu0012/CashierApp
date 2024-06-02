@@ -18,5 +18,8 @@ public interface MemberRepository {
 
     public Member updateMember(Member updatedMember);
 
+    public int increasePoint(String tel,int point);
+    public int decreasePoint(String tel,int point);
+
     public Stream getStream();
 }
