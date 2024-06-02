@@ -1,0 +1,5 @@
+sit\cashier\Cashier.class
+services\CashierService.class
+repository\MemMemberRepo.class
+services\MemberRepository.class
+domain\Member.class
