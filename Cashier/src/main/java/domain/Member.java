@@ -6,7 +6,7 @@ public class Member implements Serializable {
     private int id;
     private String name;
     private String tel;
-    private String idCard;
+    private final String idCard;
     private int point = 0;
 
     public Member(String name, String tel, String idCard) {
@@ -35,16 +35,16 @@ public class Member implements Serializable {
         return idCard;
     }
 
+    public int getPoint() {
+        return point;
+    }
+
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getPoint() {
-        return point;
     }
 
     public int addPoint(int point) {

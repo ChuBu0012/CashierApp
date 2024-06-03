@@ -21,17 +21,21 @@ public class CashierService {
         return member.addMember(new Member(name, tel, idCard));
     }
 
-    public Member cancelMember(String tel) {
-        int memId = getId(tel);
+    public Member cancelMember(String idCard) {
+        int memId = getIdByIdCard(idCard);
         if (memId != -1) {
             return member.removeMember(memId);
         }
         return null;
     }
 
-    public int getId(String tel) {
-        return member.findId(tel);
+    public int getIdBytel(String tel) {
+        return member.findIdByTel(tel);
     }
+    public int getIdByIdCard(String idCard) {
+        return member.findIdByIdCard(idCard);
+    }
+
 
     public Member getMember(String tel) {
         if (tel == null || tel.isBlank()) {

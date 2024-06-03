@@ -1,13 +1,14 @@
 package repository;
 
 import domain.Member;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import services.MemberRepository;
 
 public class MemMemberRepo implements MemberRepository {
@@ -17,7 +18,12 @@ public class MemMemberRepo implements MemberRepository {
 
     @Override
     public Member addMember(Member member) {
-        member.setId(nextId);
+        for (Member existingMember : repo.values()) {
+            if (existingMember.getIdCard().equals(member.getIdCard())) {
+                System.out.println("Already have this ID card number...");
+                return null;
+            }
+        }
         return repo.put(nextId++, member);
     }
 
@@ -27,12 +33,21 @@ public class MemMemberRepo implements MemberRepository {
     }
 
     @Override
-    public int findId(String tel) {
+    public int findIdByTel(String tel) {
         Optional<Map.Entry<Integer, Member>> result = getStream()
                 .filter(entry -> entry.getValue().getTel().equals(tel))
                 .findFirst();
 
-        return result.map(Map.Entry::getKey).orElse(-1);
+        return result.map(entry -> entry.getKey()).orElse(-1);
+    }
+
+    @Override
+    public int findIdByIdCard(String idCard) {
+        Optional<Map.Entry<Integer, Member>> result = getStream()
+                .filter(entry -> entry.getValue().getIdCard().equals(idCard))
+                .findFirst();
+
+        return result.map(entry -> entry.getKey()).orElse(-1);
     }
 
     @Override
@@ -41,23 +56,23 @@ public class MemMemberRepo implements MemberRepository {
                 .filter(entry -> entry.getValue().getTel().equals(tel))
                 .findFirst();
 
-        return result.map(Map.Entry::getValue).orElse(null);
+        return result.map(entry -> entry.getValue()).orElse(null);
     }
-    
+
     @Override
     public List<Member> findAllMembers() {
         return new ArrayList<>(repo.values());
     }
-    
+
     @Override
-     public Member updateMember(Member updatedMember) {
+    public Member updateMember(Member updatedMember) {
         for (Map.Entry<Integer, Member> entry : repo.entrySet()) {
             Member member = entry.getValue();
             if (member.getIdCard().equals(updatedMember.getIdCard())) {
-                
+
                 member.setName(updatedMember.getName());
                 member.setTel(updatedMember.getTel());
-     
+
                 return member;
             }
         }

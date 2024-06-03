@@ -10,7 +10,8 @@ public interface MemberRepository {
 
     public Member removeMember(int id);
 
-    public int findId(String tel);
+    public int findIdByTel(String tel);
+    public int findIdByIdCard(String idCard);
 
     public Member findMember(String tel);
 
