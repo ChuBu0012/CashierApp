@@ -21,24 +21,27 @@ import java.util.stream.Stream;
 import services.MemberRepository;
 
 public class FileMemberRepo implements MemberRepository {
-    private static int nextId = 0;
+
     private final String pathFile = "members.txt";
 
     @Override
     public Member addMember(Member member) {
         try {
             List<Member> existingMembers = findAllMembers();
-
+            // Check idCard Already
             for (Member existingMember : existingMembers) {
                 if (existingMember.getIdCard().equals(member.getIdCard())) {
                     System.out.println("Already have this ID card number...");
                     return null;
                 }
             }
-            member.setId(nextId++);
+            member.setId(existingMembers.isEmpty()
+                    ? 1
+                    : existingMembers.get(existingMembers.size() - 1).getId() + 1);
+            
             existingMembers.add(member);
 
-            try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
+            try ( ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
                 for (Member existingMember : existingMembers) {
                     outputStream.writeObject(existingMember);
                 }
@@ -58,7 +61,7 @@ public class FileMemberRepo implements MemberRepository {
 
         if (memberToRemove.isPresent()) {
             members.remove(memberToRemove.get());
-            try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
+            try ( ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
                 for (Member member : members) {
                     outputStream.writeObject(member);
                 }
@@ -102,7 +105,7 @@ public class FileMemberRepo implements MemberRepository {
     @Override
     public List<Member> findAllMembers() {
         List<Member> members = new ArrayList<>();
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(pathFile))) {
+        try ( ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(pathFile))) {
             while (true) {
                 try {
                     Member member = (Member) inputStream.readObject();
@@ -123,7 +126,7 @@ public class FileMemberRepo implements MemberRepository {
         for (int i = 0; i < members.size(); i++) {
             if (members.get(i).getId() == updatedMember.getId()) {
                 members.set(i, updatedMember);
-                try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
+                try ( ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
                     for (Member member : members) {
                         outputStream.writeObject(member);
                     }
@@ -144,7 +147,7 @@ public class FileMemberRepo implements MemberRepository {
         for (Member member : members) {
             if (member.getTel().equals(tel)) {
                 member.addPoint(point);
-                try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
+                try ( ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
                     for (Member m : members) {
                         outputStream.writeObject(m);
                     }
@@ -165,7 +168,7 @@ public class FileMemberRepo implements MemberRepository {
         for (Member member : members) {
             if (member.getTel().equals(tel)) {
                 member.minusPoint(point);
-                try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
+                try ( ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(pathFile))) {
                     for (Member m : members) {
                         outputStream.writeObject(m);
                     }
