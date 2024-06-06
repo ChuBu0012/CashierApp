@@ -1,0 +1,33 @@
+CREATE DATABASE cashier;
+
+CREATE TABLE IF NOT EXISTS cashiers (
+	cashier_id INT PRIMARY KEY AUTO_INCREMENT, 
+	name VARCHAR(255) NOT NULL,
+	password VARCHAR(255) NOT NULL, 
+	id_card VARCHAR(255) NOT NULL UNIQUE, 
+	role VARCHAR(255) NOT NULL, 
+	tel VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS members (
+    member_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    tel VARCHAR(255) NOT NULL UNIQUE,
+    id_card VARCHAR(255) NOT NULL UNIQUE,
+    point INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    discount INT,
+    raw_price INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS orders_detail (
+    order_detail_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    price INT NOT NULL,
+    quantity INT NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
