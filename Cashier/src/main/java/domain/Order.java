@@ -10,12 +10,16 @@ public class Order implements Serializable {
     private int discount;
     private int rawPrice;
 
-    public Order(){
+    public Order() {
         orders = new LinkedList<OrderDetail>();
     }
 
-    public boolean addOrderDetail(OrderDetail order){
-        return orders.add(order);
+    public boolean addOrderDetail(OrderDetail order) {
+        if(orders.add(order)){
+            this.rawPrice += order.getPrice() * order.getQuantity();
+            return true;
+        }
+        return false;
     }
 
     public int getId() {

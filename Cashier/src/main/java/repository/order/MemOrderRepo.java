@@ -9,9 +9,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class MemOrderRepo implements OrderRepository {
-    private static int nextId = 0;
-    private final List<Order> orders = new LinkedList<>();
+    private static int nextId;
+    private final List<Order> orders;
 
+    public MemOrderRepo() {
+        nextId = 0;
+        orders = new LinkedList<>();
+    }
 
     @Override
     public boolean addOrder(Order order) {

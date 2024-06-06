@@ -1,20 +1,20 @@
 package repository.member;
 
 import domain.Member;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
-
 import services.MemberRepository;
+
+import java.util.*;
+import java.util.stream.Stream;
 
 public class MemMemberRepo implements MemberRepository {
 
-    private static int nextId = 0;
-    private final Map<Integer, Member> repo = new HashMap<>();
+    private static int nextId;
+    private final Map<Integer, Member> repo;
+
+    public MemMemberRepo() {
+        nextId = 0;
+        repo = new HashMap<>();
+    }
 
     @Override
     public Member addMember(Member member) {

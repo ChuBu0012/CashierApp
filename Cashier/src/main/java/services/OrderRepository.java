@@ -12,4 +12,5 @@ public interface OrderRepository {
     List<Order> getAllOrderFromNewToOld();
     Order findOrderById(int id);
     List<OrderDetail> findOrderDetailById(int id);
+
 }

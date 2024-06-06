@@ -21,6 +21,5 @@ public interface MemberRepository {
 
     public int increasePoint(String tel,int point);
     public int decreasePoint(String tel,int point);
-
     public Stream getStream();
 }
