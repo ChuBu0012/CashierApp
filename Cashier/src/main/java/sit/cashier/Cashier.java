@@ -1,35 +1,31 @@
 package sit.cashier;
 
-
-import java.io.Console;
+import domain.Order;
+import domain.OrderDetail;
+import repository.member.MemMemberRepo;
+import repository.order.DbmsOrderRepo;
+import repository.order.FileOrderRepo;
+import repository.order.MemOrderRepo;
+import services.CashierService;
 
 public class Cashier {
-    static final String USERNAME = "chubu";
-    static final String PASSWORD = "0012";
-
     public static void main(String[] args) {
-        boolean checkLogin = login();
-        while (!checkLogin) {
-            checkLogin = login();
-        }
+        MemMemberRepo memberMem = new MemMemberRepo();
+        DbmsOrderRepo orderDb = new DbmsOrderRepo();
+        CashierService cashierService = new CashierService(memberMem, orderDb);
+            OrderDetail od1 = new OrderDetail("noodle",35,1);
+            OrderDetail od2 = new OrderDetail("noodle2",45,3);
+            OrderDetail od3 = new OrderDetail("noodle3",55,6);
+            Order o1 = new Order();
+            Order o2 = new Order();
+            o1.addOrderDetail(od1);
+            o1.addOrderDetail(od2);
+            o1.addOrderDetail(od3);
+            o2.addOrderDetail(od2);
+            o2.addOrderDetail(od3);
+//            cashierService.saveOrder(o1);
+//            cashierService.saveOrder(o2);
+            cashierService.showAllOrderFromOldToNew();
     }
 
-    static boolean login() {
-        Console console = System.console();
-        if (console == null) {
-            System.out.println("Console not available. Exiting...");
-            System.exit(1); // Exit if console is not available
-        }
-
-        String userName = console.readLine("Enter username: ");
-        char[] passwordChars = console.readPassword("Enter password: ");
-        String password = new String(passwordChars);
-
-        if (password.equals(PASSWORD) && userName.equals(USERNAME)) {
-            System.out.println("Login successful!...");
-            return true;
-        }
-        System.out.println("Login failed!...");
-        return false;
-    }
 }
