@@ -6,20 +6,19 @@ import java.util.stream.Stream;
 
 public interface MemberRepository {
 
-    public Member addMember(Member member);
+     Member addMember(Member member);
+     Member removeMember(int id);
 
-    public Member removeMember(int id);
+     int findIdByTel(String tel);
+     int findIdByIdCard(String idCard);
 
-    public int findIdByTel(String tel);
-    public int findIdByIdCard(String idCard);
+     Member findMember(String tel);
 
-    public Member findMember(String tel);
+     List<Member> findAllMembers();
 
-    public List<Member> findAllMembers();
+     Member updateMember(Member updatedMember);
 
-    public Member updateMember(Member updatedMember);
-
-    public int increasePoint(String tel,int point);
-    public int decreasePoint(String tel,int point);
-    public Stream getStream();
+     int increasePoint(String tel,int point);
+     int decreasePoint(String tel,int point);
+     Stream getStream();
 }

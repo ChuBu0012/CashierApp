@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package repository.cashier;
 
 import domain.Cashier;
@@ -9,13 +5,18 @@ import domain.Order;
 import services.CashierRepository;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FileCashierRepo implements CashierRepository {
 
-    private static final String PATH_FILE = "cashiers.txt";
+    private static final String PATH_FILE = "/cashiers.txt";
+    private List<Cashier> cashiers;
+
+    public FileCashierRepo() {
+        this.cashiers = findAllCashiers();
+    }
 
     @Override
     public int calcOrder(Order order, int discount) {
@@ -24,23 +25,18 @@ public class FileCashierRepo implements CashierRepository {
 
     @Override
     public Cashier addCashier(Cashier cashier) {
-        List<Cashier> existingCashiers = findAllCashiers();
-
-        // Check for duplicate idCard
-        if (existingCashiers.stream().anyMatch(c -> c.getIdCard().equals(cashier.getIdCard()))) {
+        if (cashiers.stream().anyMatch(c -> c.getIdCard().equals(cashier.getIdCard()))) {
             System.out.println("Already have this ID card number...");
             return null;
         }
 
-        cashier.setCashier_id(generateNewId(existingCashiers));
-        existingCashiers.add(cashier);
-        writeToFile(existingCashiers);
+        cashiers.add(cashier);
+        writeToFile();
         return cashier;
     }
 
     @Override
     public Cashier removeCashier(int cashier_id) {
-        List<Cashier> cashiers = findAllCashiers();
         Cashier cashierToRemove = cashiers.stream()
                 .filter(c -> c.getCashier_id() == cashier_id)
                 .findFirst()
@@ -48,7 +44,7 @@ public class FileCashierRepo implements CashierRepository {
 
         if (cashierToRemove != null) {
             cashiers.remove(cashierToRemove);
-            writeToFile(cashiers);
+            writeToFile();
             return cashierToRemove;
         } else {
             System.out.println("Cashier not found.");
@@ -58,11 +54,10 @@ public class FileCashierRepo implements CashierRepository {
 
     @Override
     public Cashier updateCashier(int cashier_id, Cashier updatedCashier) {
-        List<Cashier> cashiers = findAllCashiers();
         for (int i = 0; i < cashiers.size(); i++) {
             if (cashiers.get(i).getCashier_id() == cashier_id) {
                 cashiers.set(i, updatedCashier);
-                writeToFile(cashiers);
+                writeToFile();
                 return updatedCashier;
             }
         }
@@ -72,24 +67,24 @@ public class FileCashierRepo implements CashierRepository {
 
     @Override
     public List<Cashier> listAllCashier() {
-        return findAllCashiers();
+        return cashiers.stream().collect(Collectors.toList());
     }
 
     @Override
     public Cashier getCashierById(int cashier_id) {
-        return findAllCashiers().stream()
+        return cashiers.stream()
                 .filter(c -> c.getCashier_id() == cashier_id)
                 .findFirst()
                 .orElse(null);
     }
 
     private List<Cashier> findAllCashiers() {
-        List<Cashier> cashiers = new LinkedList<>();
-        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(PATH_FILE));
-             ObjectInputStream ois = new ObjectInputStream(bis)) {
+        List<Cashier> findCashiers = new LinkedList<>();
+        try (InputStream inputStream = getClass().getResourceAsStream(PATH_FILE);
+             ObjectInputStream ois = new ObjectInputStream(inputStream)) {
             while (true) {
                 try {
-                    cashiers.add((Cashier) ois.readObject());
+                    findCashiers.add((Cashier) ois.readObject());
                 } catch (EOFException e) {
                     break;
                 }
@@ -97,19 +92,12 @@ public class FileCashierRepo implements CashierRepository {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("File Not Found : " + e.getMessage());
         }
-        return cashiers;
+        return findCashiers;
     }
 
-    private int generateNewId(List<Cashier> cashiers) {
-        return cashiers.isEmpty() ? 1 : cashiers.stream()
-                .mapToInt(Cashier::getCashier_id)
-                .max()
-                .orElse(0) + 1;
-    }
-
-    private void writeToFile(List<Cashier> cashiers) {
-        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(PATH_FILE));
-             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+    private void writeToFile() {
+        try (OutputStream outputStream = new FileOutputStream(PATH_FILE);
+             ObjectOutputStream oos = new ObjectOutputStream(outputStream)) {
             for (Cashier cashier : cashiers) {
                 oos.writeObject(cashier);
             }

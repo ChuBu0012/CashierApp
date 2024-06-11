@@ -2,43 +2,51 @@ package repository.member;
 
 import domain.Member;
 import services.MemberRepository;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
 import java.util.stream.Stream;
 
 public class DbmsMemberRepo implements MemberRepository {
+
     private final String url = "jdbc:mysql://127.0.0.1:3306/cashier";
     private final String user = "root";
-    private final String password = "0012";
+    private final String password;
+    private Connection connection;
 
+    public DbmsMemberRepo(String password) throws ClassNotFoundException, SQLException {
+        this.password = password;
 
-    public DbmsMemberRepo() {
-        String sql = "CREATE TABLE IF NOT EXISTS members (" +
-                "member_id INT PRIMARY KEY AUTO_INCREMENT," +
-                "name VARCHAR(255) NOT NULL," +
-                "tel VARCHAR(255) NOT NULL UNIQUE," +
-                "id_card VARCHAR(255) NOT NULL UNIQUE," +
-                "point INT NOT NULL" +
-                ")";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.executeUpdate();
+        String sql = "CREATE TABLE IF NOT EXISTS members ("
+                + "member_id INT PRIMARY KEY AUTO_INCREMENT,"
+                + "name VARCHAR(255) NOT NULL,"
+                + "tel VARCHAR(255) NOT NULL UNIQUE,"
+                + "id_card VARCHAR(255) NOT NULL UNIQUE,"
+                + "point INT NOT NULL"
+                + ")";
+
+        try {
+            connection = DriverManager.getConnection(url, user, this.password);
+            try (PreparedStatement statement = connection.prepareStatement(sql);) {
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Create Table Order Fail...", e);
+
+            }
         } catch (SQLException e) {
-            throw new RuntimeException("Error creating table", e);
+            throw new SQLException("Failed to establish a database connection", e);
         }
     }
 
-    public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
+    public Connection getConnection() {
+        return connection;
     }
 
     @Override
     public Member addMember(Member member) {
         String sql = "INSERT INTO members (name, tel, id_card, point) VALUES (?, ?, ?, ?)";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, member.getName());
             statement.setString(2, member.getTel());
             statement.setString(3, member.getIdCard());
@@ -56,9 +64,7 @@ public class DbmsMemberRepo implements MemberRepository {
         Member deletedMember = null;
         String sqlSelect = "SELECT * FROM members WHERE member_id = ?";
         String sqlDelete = "DELETE FROM members WHERE member_id = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement selectStatement = connection.prepareStatement(sqlSelect);
-             PreparedStatement deleteStatement = connection.prepareStatement(sqlDelete)) {
+        try (Connection connection = getConnection(); PreparedStatement selectStatement = connection.prepareStatement(sqlSelect); PreparedStatement deleteStatement = connection.prepareStatement(sqlDelete)) {
             selectStatement.setInt(1, id);
             try (ResultSet resultSet = selectStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -80,8 +86,7 @@ public class DbmsMemberRepo implements MemberRepository {
     @Override
     public int findIdByTel(String tel) {
         String sql = "SELECT member_id FROM members WHERE tel = ? LIMIT 1";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, tel);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -97,8 +102,7 @@ public class DbmsMemberRepo implements MemberRepository {
     @Override
     public int findIdByIdCard(String idCard) {
         String sql = "SELECT member_id FROM members WHERE id_card = ? LIMIT 1";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, idCard);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -114,8 +118,7 @@ public class DbmsMemberRepo implements MemberRepository {
     @Override
     public Member findMember(String tel) {
         String sql = "SELECT * FROM members WHERE tel = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, tel);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -136,9 +139,7 @@ public class DbmsMemberRepo implements MemberRepository {
     public List<Member> findAllMembers() {
         List<Member> members = new ArrayList<>();
         String sql = "SELECT * FROM members";
-        try (Connection connection = getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Connection connection = getConnection(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {
                 members.add(new Member(
                         resultSet.getString("name"),
@@ -152,11 +153,9 @@ public class DbmsMemberRepo implements MemberRepository {
         return members;
     }
 
-
     public Member updateMember(Member updatedMember) {
         String sql = "UPDATE members SET name = ?, tel = ? WHERE id_card = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, updatedMember.getName());
             statement.setString(2, updatedMember.getTel());
             statement.setString(3, updatedMember.getIdCard());
@@ -173,8 +172,7 @@ public class DbmsMemberRepo implements MemberRepository {
         int memberId = findIdByTel(tel);
         if (memberId != 0) {
             String sql = "UPDATE members SET point = point + ? WHERE member_id = ?";
-            try (Connection connection = getConnection();
-                 PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, point);
                 statement.setInt(2, memberId);
                 statement.executeUpdate();
@@ -192,8 +190,7 @@ public class DbmsMemberRepo implements MemberRepository {
         int memberId = findIdByTel(tel);
         if (memberId != 0) {
             String sql = "UPDATE members SET point = point - ? WHERE member_id = ?";
-            try (Connection connection = getConnection();
-                 PreparedStatement statement = connection.prepareStatement(sql)) {
+            try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, point);
                 statement.setInt(2, memberId);
                 statement.executeUpdate();
@@ -209,9 +206,7 @@ public class DbmsMemberRepo implements MemberRepository {
     @Override
     public Stream<Member> getStream() {
         String sql = "SELECT * FROM members";
-        try (Connection connection = getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Connection connection = getConnection(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             List<Member> members = new ArrayList<>();
             while (resultSet.next()) {
                 Member member = new Member(

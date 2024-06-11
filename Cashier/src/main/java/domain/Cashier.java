@@ -70,11 +70,14 @@ public class Cashier implements Serializable {
     @Override
     public String toString() {
         return
-                "cashier_id=" + cashier_id +
-                ", name='" + name + '\'' +
-                ", password='" + password + '\'' +
-                ", idCard='" + idCard + '\'' +
-                ", role='" + role + '\'' +
-                ", tel='" + tel + '\'';
+                "cashier_id = " + cashier_id +
+                ", name = '" + name + '\'' +
+                ", password = '" + password + '\'' +
+                ", idCard = '" + idCard + '\'' +
+                ", role = '" + role + '\'' +
+                ", tel = '" + tel + '\'';
     }
+
+
+    
 }

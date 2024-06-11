@@ -1,41 +1,57 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package repository.member;
 
 import domain.Member;
 import services.MemberRepository;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public class FileMemberRepo implements MemberRepository {
 
-    private static final String PATH_FILE = "members.txt";
+    private final String PATH_FILE = "/members.txt";
+    private final List<Member> members;
+
+    public FileMemberRepo() {
+        members = findAllMembers();
+    }
+
+    @Override
+    public List<Member> findAllMembers() {
+        List<Member> findMem = new LinkedList<>();
+        try (InputStream inputStream = getClass().getResourceAsStream(PATH_FILE);
+             ObjectInputStream ois = new ObjectInputStream(inputStream)) {
+            while (true) {
+                try {
+                    findMem.add((Member) ois.readObject());
+                } catch (EOFException e) {
+                    break;
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("File Not Found : " + e.getMessage());
+        }
+        return findMem;
+    }
 
     @Override
     public Member addMember(Member member) {
-        List<Member> existingMembers = findAllMembers();
-
         // Check for duplicate idCard
-        if (existingMembers.stream().anyMatch(m -> m.getIdCard().equals(member.getIdCard()))) {
+        if (members.stream().anyMatch(m -> m.getIdCard().equals(member.getIdCard()))) {
             System.out.println("Already have this ID card number...");
             return null;
         }
 
-        member.setId(generateNewId(existingMembers));
-        existingMembers.add(member);
-        writeToFile(existingMembers);
+        member.setId(generateNewId(members));
+        members.add(member);
+        writeToFile(members);
         return member;
     }
 
     @Override
     public Member removeMember(int id) {
-        List<Member> members = findAllMembers();
         Optional<Member> memberToRemove = members.stream()
                 .filter(m -> m.getId() == id)
                 .findFirst();
@@ -52,7 +68,7 @@ public class FileMemberRepo implements MemberRepository {
 
     @Override
     public int findIdByIdCard(String idCard) {
-        return findAllMembers().stream()
+        return members.stream()
                 .filter(m -> m.getIdCard().equals(idCard))
                 .mapToInt(Member::getId)
                 .findFirst()
@@ -61,7 +77,7 @@ public class FileMemberRepo implements MemberRepository {
 
     @Override
     public int findIdByTel(String tel) {
-        return findAllMembers().stream()
+        return members.stream()
                 .filter(m -> m.getTel().equals(tel))
                 .mapToInt(Member::getId)
                 .findFirst()
@@ -70,33 +86,14 @@ public class FileMemberRepo implements MemberRepository {
 
     @Override
     public Member findMember(String tel) {
-        return findAllMembers().stream()
+        return members.stream()
                 .filter(m -> m.getTel().equals(tel))
                 .findFirst()
                 .orElse(null);
     }
 
     @Override
-    public List<Member> findAllMembers() {
-        List<Member> members = new ArrayList<>();
-        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(PATH_FILE));
-             ObjectInputStream ois = new ObjectInputStream(bis)) {
-            while (true) {
-                try {
-                    members.add((Member) ois.readObject());
-                } catch (EOFException e) {
-                    break;
-                }
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("File Not Found : " + e.getMessage());
-        }
-        return members;
-    }
-
-    @Override
     public Member updateMember(Member updatedMember) {
-        List<Member> members = findAllMembers();
         for (int i = 0; i < members.size(); i++) {
             if (members.get(i).getId() == updatedMember.getId()) {
                 members.set(i, updatedMember);
@@ -120,7 +117,7 @@ public class FileMemberRepo implements MemberRepository {
 
     @Override
     public Stream<Member> getStream() {
-        return findAllMembers().stream();
+        return members.stream();
     }
 
     private int generateNewId(List<Member> members) {
@@ -131,8 +128,8 @@ public class FileMemberRepo implements MemberRepository {
     }
 
     private void writeToFile(List<Member> members) {
-        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(PATH_FILE));
-             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+        try (OutputStream outputStream = new FileOutputStream(PATH_FILE);
+             ObjectOutputStream oos = new ObjectOutputStream(outputStream)) {
             for (Member member : members) {
                 oos.writeObject(member);
             }
@@ -142,7 +139,6 @@ public class FileMemberRepo implements MemberRepository {
     }
 
     private int updatePointForMember(String tel, int point, boolean increase) {
-        List<Member> members = findAllMembers();
         for (Member member : members) {
             if (member.getTel().equals(tel)) {
                 if (increase) {

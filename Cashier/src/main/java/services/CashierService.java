@@ -5,6 +5,7 @@ import domain.*;
 import java.util.List;
 
 public class CashierService {
+
     private final MemberRepository member;
     private final OrderRepository order;
     private final CashierRepository cashier;
@@ -22,9 +23,10 @@ public class CashierService {
         if (cashier_id == userMemId && password.equals(userMemPassword)) {
             return this.cashier.addCashier(new Cashier(userMemId, "kiki", userMemPassword, "12345", Role.MANAGER, "0952222222"));
         }
-        ;
+        
         Cashier auth = cashier.getCashierById(cashier_id);
-        if (cashier != null && auth.getPassword().equals(password)) {
+        
+        if (auth != null && auth.getPassword().equals(password)) {
             return auth;
         }
         return null;
@@ -34,9 +36,9 @@ public class CashierService {
         if (member != null) {
             System.out.println("Member: " + member.getName());
         }
-        System.out.println("Name\t\tQuantity\tPrice");
+        System.out.printf("%-20s%-10s%s\n", "Name", "Price (Bath)", "Quantity");
         order.getOrders().stream().forEach(ele -> {
-            System.out.printf("%-12s\t%-7d\t%d\n", ele.getName(), ele.getQuantity(), ele.getPrice());
+            System.out.printf("%-20s%-10d%d\n", ele.getName(), ele.getPrice(), ele.getQuantity());
         });
         System.out.println("Price: " + (cashier.calcOrder(order, 0) - cashier.calcOrder(order, 0) * 7 / 100));
         System.out.println("VAT 7%: " + cashier.calcOrder(order, 0) * 7 / 100);
@@ -44,23 +46,25 @@ public class CashierService {
             if (member.getPoint() >= discount) {
                 order.setDiscount(discount);
                 System.out.println("Discount: " + discount);
+                this.member.decreasePoint(member.getTel(), discount);
             }
         }
         System.out.println("Total Price: " + cashier.calcOrder(order, discount));
         if (collect > 0) {
-            this.member.increasePoint(member.getTel(), collect);
             System.out.println("collect Point: " + "+" + collect);
+            this.member.increasePoint(member.getTel(), collect);
         }
-        this.order.addOrder(order);
+        System.out.println("");
+        this.saveOrder(order);
 
     }
 
     public Cashier registerCashier(int cashier_id, String name, String password, String idCard, Role role, String tel) {
-        if (name == null || name.isBlank() ||
-                password == null || password.isBlank() ||
-                idCard == null || idCard.isBlank() ||
-                role == null ||
-                tel == null || tel.isBlank()) {
+        if (name == null || name.isBlank()
+                || password == null || password.isBlank()
+                || idCard == null || idCard.isBlank()
+                || role == null
+                || tel == null || tel.isBlank()) {
             return null;
         }
 
@@ -86,18 +90,16 @@ public class CashierService {
         return cashier.removeCashier(cashier_id);
     }
 
-    public Cashier updateInfoCashier(int cashier_id, String name, String password, String idCard, Role role, String tel) {
-        if (cashier_id <= 0 ||
-                name == null || name.isBlank() ||
-                password == null || password.isBlank() ||
-                idCard == null || idCard.isBlank() ||
-                role == null ||
-                tel == null || tel.isBlank()) {
+    public Cashier updateInfoCashier(Cashier cashier) {
+        if (cashier == null || cashier.getCashier_id() <= 0
+                || cashier.getName() == null || cashier.getName().isBlank()
+                || cashier.getTel() == null || cashier.getTel().isBlank()
+                || cashier.getIdCard() == null || cashier.getIdCard().isBlank()
+                || cashier.getRole() == null || cashier.getPassword() == null || cashier.getPassword().isBlank()) {
             return null;
         }
 
-        Cashier updatedCashier = new Cashier(cashier_id, name, password, idCard, role, tel);
-        return cashier.updateCashier(cashier_id, updatedCashier);
+        return this.cashier.updateCashier(cashier.getCashier_id(), cashier);
     }
 
     // Member Service
@@ -125,7 +127,6 @@ public class CashierService {
     public int getIdByIdCard(String idCard) {
         return member.findIdByIdCard(idCard);
     }
-
 
     public Member getMember(String tel) {
         if (tel == null || tel.isBlank()) {

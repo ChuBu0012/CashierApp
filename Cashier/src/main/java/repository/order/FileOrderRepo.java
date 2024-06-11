@@ -8,7 +8,8 @@ import java.io.*;
 import java.util.*;
 
 public class FileOrderRepo implements OrderRepository {
-    private static final String PATH_FILE = "orders.txt";
+
+    private static final String PATH_FILE = "/orders.txt";
     private List<Order> orders = new ArrayList<>();
 
     public FileOrderRepo() {
@@ -16,7 +17,7 @@ public class FileOrderRepo implements OrderRepository {
     }
 
     private void readFromFile() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(PATH_FILE))) {
+        try (ObjectInputStream ois = new ObjectInputStream(getClass().getResourceAsStream(PATH_FILE))) {
             orders = (List<Order>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error reading from file: " + e.getMessage());

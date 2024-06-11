@@ -9,43 +9,51 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DbmsOrderRepo implements OrderRepository {
+
     private final String url = "jdbc:mysql://127.0.0.1:3306/cashier";
     private final String user = "root";
-    private final String password = "0012";
+    private final String password;
+    private Connection connection;
 
-    public DbmsOrderRepo() {
-        String createOrder = "CREATE TABLE IF NOT EXISTS orders (" +
-                "order_id INT PRIMARY KEY AUTO_INCREMENT," +
-                "discount INT," +
-                "raw_price INT NOT NULL" +
-                ")";
+    public DbmsOrderRepo(String password) throws ClassNotFoundException, SQLException {
+        this.password = password;
 
-        String createOrderDetail = "CREATE TABLE IF NOT EXISTS orders_detail (" +
-                "order_detail_id INT PRIMARY KEY AUTO_INCREMENT," +
-                "order_id INT NOT NULL," +
-                "name VARCHAR(255) NOT NULL," +
-                "price INT NOT NULL," +
-                "quantity INT NOT NULL," +
-                "FOREIGN KEY (order_id) REFERENCES orders(order_id)" +
-                ")";
-        try (Connection connection = getConnection();
-             PreparedStatement statement1 = connection.prepareStatement(createOrder);
-             PreparedStatement statement2 = connection.prepareStatement(createOrderDetail)) {
-            statement1.executeUpdate();
-            statement2.executeUpdate();
+        String createOrder = "CREATE TABLE IF NOT EXISTS orders ("
+                + "order_id INT PRIMARY KEY AUTO_INCREMENT,"
+                + "discount INT,"
+                + "raw_price INT NOT NULL"
+                + ")";
+
+        String createOrderDetail = "CREATE TABLE IF NOT EXISTS orders_detail ("
+                + "order_detail_id INT PRIMARY KEY AUTO_INCREMENT,"
+                + "order_id INT NOT NULL,"
+                + "name VARCHAR(255) NOT NULL,"
+                + "price INT NOT NULL,"
+                + "quantity INT NOT NULL,"
+                + "FOREIGN KEY (order_id) REFERENCES orders(order_id)"
+                + ")";
+
+        try {
+            connection = DriverManager.getConnection(url, user, this.password);
+            try (PreparedStatement statement1 = connection.prepareStatement(createOrder); PreparedStatement statement2 = connection.prepareStatement(createOrderDetail)) {
+                statement1.executeUpdate();
+                statement2.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Create Table Order Fail...", e);
+
+            }
         } catch (SQLException e) {
-            throw new RuntimeException("Error creating table", e);
+            throw new SQLException("Failed to establish a database connection", e);
         }
     }
 
-    public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
+    public Connection getConnection() {
+        return connection;
     }
 
     @Override
     public boolean addOrder(Order order) {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO orders (discount, raw_price) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO orders (discount, raw_price) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, order.getDiscount());
             statement.setInt(2, order.getRawPrice());
             statement.executeUpdate();
@@ -66,8 +74,7 @@ public class DbmsOrderRepo implements OrderRepository {
     }
 
     private void addOrderDetail(int orderId, OrderDetail detail) throws SQLException {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("INSERT INTO orders_detail (order_id, name, price, quantity) VALUES (?, ?, ?, ?)")) {
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO orders_detail (order_id, name, price, quantity) VALUES (?, ?, ?, ?)")) {
             statement.setInt(1, orderId);
             statement.setString(2, detail.getName());
             statement.setInt(3, detail.getPrice());
@@ -78,8 +85,7 @@ public class DbmsOrderRepo implements OrderRepository {
 
     @Override
     public boolean removeOrder(int id) {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("DELETE FROM orders WHERE order_id = ?")) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM orders WHERE order_id = ?")) {
             statement.setInt(1, id);
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
@@ -107,8 +113,7 @@ public class DbmsOrderRepo implements OrderRepository {
 
     @Override
     public List<OrderDetail> findOrderDetailById(int id) {
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM orders_detail WHERE order_id = ?")) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM orders_detail WHERE order_id = ?")) {
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
             List<OrderDetail> orderDetails = new LinkedList<>();
@@ -127,9 +132,7 @@ public class DbmsOrderRepo implements OrderRepository {
 
     private List<Order> getOrders(String query) {
         List<Order> orders = new LinkedList<>();
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(query);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (PreparedStatement statement = connection.prepareStatement(query); ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 int orderId = resultSet.getInt("order_id");
                 int discount = resultSet.getInt("discount");

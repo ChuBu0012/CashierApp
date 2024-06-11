@@ -58,10 +58,10 @@ public class Member implements Serializable {
     @Override
     public String toString() {
         return "Member{" +
-                "name='" + name + '\'' +
-                ", tel='" + tel + '\'' +
-                ", idCard='" + idCard + '\'' +
-                ", point=" + point +
+                "name = '" + name + '\'' +
+                ", tel = '" + tel + '\'' +
+                ", idCard = '" + idCard + '\'' +
+                ", point = " + point +
                 '}';
     }
 }

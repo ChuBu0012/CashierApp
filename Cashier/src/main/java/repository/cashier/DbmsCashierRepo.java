@@ -10,29 +10,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DbmsCashierRepo implements CashierRepository {
+
     private final String url = "jdbc:mysql://127.0.0.1:3306/cashier";
     private final String user = "root";
-    private final String password = "0012";
+    private final String password;
+    private Connection connection;
 
-    public DbmsCashierRepo() {
-        String sql = "CREATE TABLE IF NOT EXISTS cashiers (" +
-                "cashier_id INT PRIMARY KEY AUTO_INCREMENT," +
-                "name VARCHAR(255) NOT NULL," +
-                "password VARCHAR(255) NOT NULL," +
-                "id_card VARCHAR(255) NOT NULL UNIQUE," +
-                "role VARCHAR(255) NOT NULL," +
-                "tel VARCHAR(255) NOT NULL UNIQUE" +
-                ")";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.executeUpdate();
+    public DbmsCashierRepo(String password) throws ClassNotFoundException, SQLException {
+
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        this.password = password;
+
+        String sql = "CREATE TABLE IF NOT EXISTS cashiers ("
+                + "cashier_id INT PRIMARY KEY AUTO_INCREMENT,"
+                + "name VARCHAR(255) NOT NULL,"
+                + "password VARCHAR(255) NOT NULL,"
+                + "id_card VARCHAR(255) NOT NULL UNIQUE,"
+                + "role VARCHAR(255) NOT NULL,"
+                + "tel VARCHAR(255) NOT NULL UNIQUE"
+                + ")";
+
+        try {
+            connection = DriverManager.getConnection(url, user, this.password);
+            try (PreparedStatement statement = connection.prepareStatement(sql);) {
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException("Create Table Order Fail...", e);
+
+            }
         } catch (SQLException e) {
-            throw new RuntimeException("Error creating table", e);
+            throw new SQLException("Failed to establish a database connection", e);
         }
     }
 
-    public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
+    public Connection getConnection() {
+        return connection;
     }
 
     @Override
@@ -43,8 +56,7 @@ public class DbmsCashierRepo implements CashierRepository {
     @Override
     public Cashier addCashier(Cashier cashier) {
         String sql = "INSERT INTO cashiers (name, password, id_card, role, tel) VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, cashier.getName());
             statement.setString(2, cashier.getPassword());
             statement.setString(3, cashier.getIdCard());
@@ -63,9 +75,7 @@ public class DbmsCashierRepo implements CashierRepository {
         Cashier deletedCashier = null;
         String sqlSelect = "SELECT * FROM cashiers WHERE cashier_id = ?";
         String sqlDelete = "DELETE FROM cashiers WHERE cashier_id = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement selectStatement = connection.prepareStatement(sqlSelect);
-             PreparedStatement deleteStatement = connection.prepareStatement(sqlDelete)) {
+        try (PreparedStatement selectStatement = connection.prepareStatement(sqlSelect); PreparedStatement deleteStatement = connection.prepareStatement(sqlDelete)) {
             selectStatement.setInt(1, cashier_id);
             try (ResultSet resultSet = selectStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -90,8 +100,7 @@ public class DbmsCashierRepo implements CashierRepository {
     @Override
     public Cashier updateCashier(int cashier_id, Cashier updatedCashier) {
         String sql = "UPDATE cashiers SET name = ?, password = ?, id_card = ?, role = ?, tel = ? WHERE cashier_id = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, updatedCashier.getName());
             statement.setString(2, updatedCashier.getPassword());
             statement.setString(3, updatedCashier.getIdCard());
@@ -110,9 +119,7 @@ public class DbmsCashierRepo implements CashierRepository {
     public List<Cashier> listAllCashier() {
         List<Cashier> cashiers = new ArrayList<>();
         String sql = "SELECT * FROM cashiers";
-        try (Connection connection = getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {
                 cashiers.add(new Cashier(
                         resultSet.getInt("cashier_id"),
@@ -132,8 +139,7 @@ public class DbmsCashierRepo implements CashierRepository {
     @Override
     public Cashier getCashierById(int cashier_id) {
         String sql = "SELECT * FROM cashiers WHERE cashier_id = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, cashier_id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
